@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 import openai
 from gtts import gTTS
 from pydub import AudioSegment
+audio = AudioSegment.from_file(ogg_path, format="ogg")
+audio.export(wav_path, format="wav")
+from pydub import AudioSegment
 from telegram import Update
 from telegram.constants import ChatAction
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
