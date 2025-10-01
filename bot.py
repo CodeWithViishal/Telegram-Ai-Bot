@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-# ---- Voice/audio imports disabled ----
+
+# ---- Voice/audio imports removed ----
 # from pydub import AudioSegment
 # from gtts import gTTS
 
@@ -69,16 +70,12 @@ async def main():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(CommandHandler("start", start))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
-    # Voice handler disabled to prevent crash
+    # Voice handler removed to prevent crash
     # app.add_handler(MessageHandler(filters.VOICE, handle_voice))
     logger.info("Bot started.")
     await app.run_polling()
 
 if __name__ == "__main__":
     import nest_asyncio
-    import asyncio
-
     nest_asyncio.apply()
     asyncio.get_event_loop().run_until_complete(main())
-
-
