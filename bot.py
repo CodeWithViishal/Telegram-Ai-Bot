@@ -9,8 +9,8 @@ import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 
-from pydub import AudioSegment
-from gtts import gTTS
+//from pydub import AudioSegment//
+//from gtts import gTTS//
 
 # ---- Load env ----
 load_dotenv()
