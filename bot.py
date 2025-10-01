@@ -1,14 +1,13 @@
 import os
 import asyncio
 import logging
+from uuid import uuid4
+from pathlib import Path
 from dotenv import load_dotenv
 
 import openai
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
-
-import nest_asyncio
-nest_asyncio.apply()  # Fixes "event loop already running" on some platforms
 
 # ---- Load env ----
 load_dotenv()
@@ -18,7 +17,8 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 if not TELEGRAM_TOKEN or not OPENAI_API_KEY:
     raise RuntimeError("Set TELEGRAM_TOKEN and OPENAI_API_KEY in .env or Railway Variables")
 
-openai.api_key = OPENAI_API_KEY
+# OpenAI client for 1.x
+client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -26,24 +26,31 @@ logger = logging.getLogger(__name__)
 # ---- Helpers ----
 async def ask_openai(prompt: str):
     def call_openai():
-        return openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-4o-mini",
-            messages=[{"role":"user","content":prompt}],
-            max_tokens=400,
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=400
         )
+        return response
     resp = await asyncio.to_thread(call_openai)
-    return resp["choices"][0]["message"]["content"]
+    return resp.choices[0].message.content
 
 async def generate_image(prompt: str):
     def call_images():
-        return openai.Image.create(prompt=prompt, n=1, size="512x512")
+        response = client.images.generate(
+            model="gpt-image-1",
+            prompt=prompt,
+            size="512x512",
+            n=1
+        )
+        return response
     resp = await asyncio.to_thread(call_images)
-    return resp["data"][0]["url"]
+    return resp.data[0].url
 
 # ---- Handlers ----
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Hello! I am your AI bot. Send me text, or /image <prompt> to generate an image!"
+        "Hello! I am your AI bot. Send me text or /image <prompt> to generate images!"
     )
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -57,6 +64,7 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             await update.message.reply_text(f"Image generation failed: {e}")
     else:
+        await update.message.reply_text("Processing your message...")
         try:
             reply = await ask_openai(text)
             await update.message.reply_text(reply)
