@@ -1,4 +1,4 @@
-python-telegram-bot==20.3
-groq
-python-dotenv
-nest_asyncio
+python-dotenv==1.0.0
+python-telegram-bot==20.6
+nest-asyncio==1.5.7
+groq==0.2.0
