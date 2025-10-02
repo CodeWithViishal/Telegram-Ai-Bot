@@ -24,9 +24,11 @@ async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
 
     try:
-        response = client.chat.completions.create(
-            model="llama-3.1-70b-versatile",   # Free Groq model
-            messages=[{"role": "user", "content": user_text}]
+        response = openai.chat.completions.create(
+    model="llama-3.1-8b-instant",
+    messages=[{"role": "user", "content": user_text}],
+)]
+
         )
         reply_text = response.choices[0].message.content
     except Exception as e:
