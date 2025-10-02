@@ -4,9 +4,7 @@ import nest_asyncio
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 from dotenv import load_dotenv
-
-# For Chat + Image generation
-import openai
+from groq import Groq  # Make sure correct import for Groq
 
 # Apply nest_asyncio to prevent event loop crashes
 nest_asyncio.apply()
@@ -14,16 +12,16 @@ nest_asyncio.apply()
 # Load environment variables
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-openai.api_key = OPENAI_API_KEY
+# Initialize Groq client
+client = Groq(api_key=GROQ_API_KEY)
 
 # --- Telegram Handlers ---
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "Hello! 🤖 I am your AI bot.\n"
+        "Hello! 🤖 I am your Gen z Ai bot.\n"
         "Send me a message to chat or type /image <prompt> to generate an image."
     )
 
@@ -37,13 +35,13 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_text = update.message.text
-
     try:
-        response = openai.chat.completions.create(
-            model="gpt-3.5-turbo",
-            messages=[{"role": "user", "content": user_text}],
+        # Groq Chat request
+        response = client.chat(
+            model="llama-3.1-8b-instant",  # Update to a supported Groq model
+            inputs=[{"role": "user", "content": user_text}]
         )
-        reply_text = response.choices[0].message.content
+        reply_text = response["outputs"][0]["content"]
     except Exception as e:
         reply_text = f"⚠️ Error: {e}"
 
@@ -57,12 +55,13 @@ async def generate_image(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prompt = " ".join(context.args)
 
     try:
-        response = openai.images.generate(
-            model="dall-e-3",
+        # Groq Image generation
+        response = client.image(
+            model="groq-image-1",  # Example model, replace if needed
             prompt=prompt,
             size="1024x1024"
         )
-        image_url = response.data[0].url
+        image_url = response["outputs"][0]["url"]
         await update.message.reply_text(f"Here is your image:\n{image_url}")
     except Exception as e:
         await update.message.reply_text(f"⚠️ Error generating image: {e}")
@@ -78,7 +77,7 @@ async def main():
     app.add_handler(CommandHandler("image", generate_image))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
-    print("Bot started ✅")
+    print("Gen Z ai Bot started ✅")
     await app.run_polling()
 
 if __name__ == "__main__":
